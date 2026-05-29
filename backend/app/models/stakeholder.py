@@ -1,5 +1,5 @@
 """Stakeholder and association relations model."""
-from sqlalchemy import Column, Integer, String, DateTime, Text, Enum, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Enum, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
