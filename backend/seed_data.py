@@ -3,27 +3,56 @@ import requests
 import json
 from datetime import datetime, timedelta
 
-BASE_URL = "https://legendary-space-yodel-wrwp79rw4xj5cpwg-8000.app.github.dev/api/v1"
+# Use localhost since backend runs inside the same Codespace
+BASE_URL = "http://localhost:8000/api/v1"
 
 def seed():
     # Create default user
     print("Creating default user...")
     try:
-        requests.post(f"{BASE_URL}/auth/seed")
-        print("✅ Default user created: admin@squash-excellence.com / squash2026")
+        res = requests.post(f"{BASE_URL}/auth/seed", timeout=10)
+        print(f"   Status: {res.status_code}")
+        print(f"   Response: {res.text[:200]}")
+        if res.status_code in [200, 201]:
+            print("✅ Default user created/verified")
     except Exception as e:
-        print(f"User may already exist: {e}")
+        print(f"   ⚠️  User seed error: {e}")
+        return
 
     # Login to get token
     print("\nAuthenticating...")
-    auth_res = requests.post(
-        f"{BASE_URL}/auth/login",
-        data={"username": "admin@squash-excellence.com", "password": "squash2026"},
-        headers={"Content-Type": "application/x-www-form-urlencoded"}
-    )
-    token = auth_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    print("✅ Authenticated")
+    try:
+        auth_res = requests.post(
+            f"{BASE_URL}/auth/login",
+            data={"username": "admin@squash-excellence.com", "password": "squash2026"},
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            timeout=10
+        )
+        print(f"   Status: {auth_res.status_code}")
+        print(f"   Response: {auth_res.text[:500]}")
+
+        if auth_res.status_code != 200:
+            print(f"\n❌ Login failed: HTTP {auth_res.status_code}")
+            print(f"   Response: {auth_res.text}")
+            return
+
+        auth_data = auth_res.json()
+        
+        if "access_token" not in auth_data:
+            print(f"\n❌ No access_token in response!")
+            print(f"   Keys found: {list(auth_data.keys())}")
+            return
+
+        token = auth_data["access_token"]
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        print("✅ Authenticated")
+
+    except requests.exceptions.JSONDecodeError:
+        print(f"\n❌ Response is not JSON: {auth_res.text[:500]}")
+        return
+    except Exception as e:
+        print(f"\n❌ Authentication failed: {e}")
+        return
 
     # Set budget
     print("\nSetting budget...")
@@ -39,8 +68,12 @@ def seed():
         "club_revenue_split": 20,
         "akash_retainer": 15000
     }
-    requests.post(f"{BASE_URL}/finance/budgets", json=budget_data, headers=headers)
-    print("✅ Budget set")
+    try:
+        res = requests.post(f"{BASE_URL}/finance/budgets", json=budget_data, headers=headers, timeout=10)
+        res.raise_for_status()
+        print("✅ Budget set")
+    except Exception as e:
+        print(f"❌ Budget failed: {e}")
 
     # Create tournaments
     print("\nCreating tournaments...")
@@ -153,11 +186,12 @@ def seed():
     ]
 
     for t in tournaments:
-        res = requests.post(f"{BASE_URL}/tournaments/", json=t, headers=headers)
-        if res.status_code == 200:
+        try:
+            res = requests.post(f"{BASE_URL}/tournaments/", json=t, headers=headers, timeout=10)
+            res.raise_for_status()
             print(f"  ✅ {t['name']}")
-        else:
-            print(f"  ❌ {t['name']}: {res.text}")
+        except Exception as e:
+            print(f"  ❌ {t['name']}: {e}")
 
     # Create athletes
     print("\nCreating athletes...")
@@ -228,11 +262,12 @@ def seed():
     ]
 
     for a in athletes:
-        res = requests.post(f"{BASE_URL}/athletes/", json=a, headers=headers)
-        if res.status_code == 200:
+        try:
+            res = requests.post(f"{BASE_URL}/athletes/", json=a, headers=headers, timeout=10)
+            res.raise_for_status()
             print(f"  ✅ {a['full_name']}")
-        else:
-            print(f"  ❌ {a['full_name']}: {res.text}")
+        except Exception as e:
+            print(f"  ❌ {a['full_name']}: {e}")
 
     # Create stakeholders
     print("\nCreating stakeholders...")
@@ -282,11 +317,12 @@ def seed():
     ]
 
     for s in stakeholders:
-        res = requests.post(f"{BASE_URL}/stakeholders/", json=s, headers=headers)
-        if res.status_code == 200:
+        try:
+            res = requests.post(f"{BASE_URL}/stakeholders/", json=s, headers=headers, timeout=10)
+            res.raise_for_status()
             print(f"  ✅ {s['name']}")
-        else:
-            print(f"  ❌ {s['name']}: {res.text}")
+        except Exception as e:
+            print(f"  ❌ {s['name']}: {e}")
 
     # Create transactions
     print("\nCreating sample transactions...")
@@ -301,13 +337,14 @@ def seed():
     ]
 
     for tx in transactions:
-        res = requests.post(f"{BASE_URL}/finance/transactions", json=tx, headers=headers)
-        if res.status_code == 200:
+        try:
+            res = requests.post(f"{BASE_URL}/finance/transactions", json=tx, headers=headers, timeout=10)
+            res.raise_for_status()
             print(f"  ✅ {tx['description']}")
-        else:
-            print(f"  ❌ {tx['description']}: {res.text}")
+        except Exception as e:
+            print(f"  ❌ {tx['description']}: {e}")
 
-    print("\n🎉 Seed complete! Access the dashboard at http://localhost:3000")
+    print("\n🎉 Seed complete!")
     print("   Login: admin@squash-excellence.com / squash2026")
 
 if __name__ == "__main__":
