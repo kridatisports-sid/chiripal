@@ -1,5 +1,3 @@
-cd /workspaces/chiripal/backend/app/routers
-cat > auth.py << 'EOF'
 """Authentication API endpoints."""
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -158,4 +156,3 @@ def seed_default_user(db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Seed failed: {str(e)}")
-EOF
