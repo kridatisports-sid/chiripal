@@ -3,7 +3,7 @@ import requests
 import json
 from datetime import datetime, timedelta
 
-BASE_URL = "http://localhost:8000/api/v1"
+BASE_URL = "https://legendary-space-yodel-wrwp79rw4xj5cpwg-8000.app.github.dev/api/v1"
 
 def seed():
     # Create default user
