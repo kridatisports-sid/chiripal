@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Trophy, Users, DollarSign, Handshake, Camera,
+  Trophy, Users, DollarSign, Users, Camera,
   TrendingUp, TrendingDown, AlertTriangle, Calendar,
   ArrowRight, Activity
 } from 'lucide-react';

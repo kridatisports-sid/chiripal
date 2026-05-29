@@ -6,7 +6,6 @@ import {
   Trophy,
   Users,
   DollarSign,
-  Handshake,
   Camera,
   Menu,
   X,
