@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Building2, Phone, Mail, Calendar, AlertTriangle, CheckCircle, Clock, MessageSquare, Handshake } from 'lucide-react';
+import { Plus, Search, Building2, Phone, Mail, Calendar, AlertTriangle, CheckCircle, Clock, MessageSquare, Users, Trophy, DollarSign, Camera, Truck } from 'lucide-react';
 import { stakeholderAPI } from '../api';
 import StakeholderForm from '../components/stakeholders/StakeholderForm';
 import TouchpointForm from '../components/stakeholders/TouchpointForm';

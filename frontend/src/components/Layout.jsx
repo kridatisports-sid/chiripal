@@ -8,7 +8,7 @@ const navItems = [
   { path: '/tournaments', label: 'Tournaments', icon: Trophy },
   { path: '/athletes', label: 'Athletes', icon: Users },
   { path: '/finance', label: 'Finance', icon: DollarSign },
-  { path: '/stakeholders', label: 'Stakeholders', icon: Handshake },
+  { path: '/stakeholders', label: 'Stakeholders', icon: Users },
   { path: '/marketing', label: 'Marketing', icon: Camera },
 ];
 
