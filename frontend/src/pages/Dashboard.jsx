@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Trophy, Users, DollarSign, Users, Camera,
-  TrendingUp, TrendingDown, AlertTriangle, Calendar,
-  ArrowRight, Activity
-} from 'lucide-react';
+import { Trophy, Users, DollarSign, Camera, TrendingUp, TrendingDown, AlertTriangle, Calendar, ArrowRight, Activity } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area

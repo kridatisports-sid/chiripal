@@ -1,18 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import {
-  LayoutDashboard,
-  Trophy,
-  Users,
-  DollarSign,
-  Camera,
-  Menu,
-  X,
-  LogOut,
-  ChevronRight,
-  Bell
-} from 'lucide-react';
+import { LayoutDashboard, Trophy, Users, DollarSign, Camera, Menu, X, LogOut, ChevronRight, Bell } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
