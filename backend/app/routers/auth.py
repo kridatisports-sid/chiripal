@@ -1,33 +1,32 @@
+cd /workspaces/chiripal/backend/app/routers
+cat > auth.py << 'EOF'
 """Authentication API endpoints."""
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+import bcrypt
 
 from ..models import get_db
 from ..models.user import User
 from ..schemas.user import UserCreate
 
-# Security config
 SECRET_KEY = "squash-excellence-2026-secret-key-change-in-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 480
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
-
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -50,7 +49,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-
+    
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
@@ -68,7 +67,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-
+    
     hashed_password = get_password_hash(user.password)
     db_user = User(
         email=user.email,
@@ -99,18 +98,18 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
+    
     if not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
+    
     access_token = create_access_token(data={"sub": user.email})
     user.last_login = datetime.now(timezone.utc)
     db.commit()
-
+    
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -141,16 +140,22 @@ def read_users_me(current_user: User = Depends(get_current_active_user)):
 
 @router.post("/seed")
 def seed_default_user(db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == "admin@squash-excellence.com").first()
-    if existing:
-        return {"message": "Default user already exists", "email": "admin@squash-excellence.com"}
-
-    user = User(
-        email="admin@squash-excellence.com",
-        full_name="Program Manager",
-        role="admin",
-        hashed_password=get_password_hash("squash2026")
-    )
-    db.add(user)
-    db.commit()
-    return {"message": "Default user created", "email": "admin@squash-excellence.com", "password": "squash2026"}
+    try:
+        existing = db.query(User).filter(User.email == "admin@squash-excellence.com").first()
+        if existing:
+            return {"message": "Default user already exists", "email": "admin@squash-excellence.com"}
+        
+        user = User(
+            email="admin@squash-excellence.com",
+            full_name="Program Manager",
+            role="admin",
+            hashed_password=get_password_hash("squash2026")
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return {"message": "Default user created", "email": "admin@squash-excellence.com", "password": "squash2026"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Seed failed: {str(e)}")
+EOF
