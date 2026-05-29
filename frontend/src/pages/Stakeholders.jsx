@@ -184,7 +184,7 @@ export default function Stakeholders() {
             <div className="flex justify-center py-12"><div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" /></div>
           ) : filtered.length === 0 ? (
             <div className="card text-center py-12">
-              <Handshake className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">No stakeholders found</p>
             </div>
           ) : (
