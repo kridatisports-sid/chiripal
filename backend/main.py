@@ -1,14 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-
-# After app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all for dev
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
@@ -27,9 +18,10 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
+# Create FastAPI app FIRST
 app = FastAPI(title="Squash Excellence CRM API")
 
-# CORS - Explicitly allow frontend origin
+# CORS - Must be added AFTER app creation, BEFORE routes
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -62,7 +54,7 @@ def get_db():
 def init_db():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     cursor = conn.cursor()
-    
+
     # Users table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -75,7 +67,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    
+
     # Members table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS members (
@@ -92,7 +84,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    
+
     # Programs/Events table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS programs (
@@ -107,7 +99,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    
+
     # Bookings/Court reservations
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS bookings (
@@ -123,7 +115,7 @@ def init_db():
             FOREIGN KEY (member_id) REFERENCES members (id)
         )
     """)
-    
+
     # Campaigns/Marketing
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS campaigns (
@@ -140,14 +132,14 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    
+
     # Insert default admin user
     hashed_password = pwd_context.hash("squash2026")
     cursor.execute("""
         INSERT OR IGNORE INTO users (email, hashed_password, full_name, role)
         VALUES (?, ?, ?, ?)
     """, ("admin@squash-excellence.com", hashed_password, "Admin User", "admin"))
-    
+
     conn.commit()
     conn.close()
 
@@ -313,23 +305,23 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_active_user), db: sqlite3.Connection = Depends(get_db)):
     cursor = db.cursor()
-    
+
     cursor.execute("SELECT COUNT(*) as count FROM members")
     total_members = cursor.fetchone()["count"]
-    
+
     cursor.execute("SELECT COUNT(*) as count FROM members WHERE status = 'active'")
     active_members = cursor.fetchone()["count"]
-    
+
     today = datetime.now().strftime("%Y-%m-%d")
     cursor.execute("SELECT COUNT(*) as count FROM bookings WHERE booking_date = ?", (today,))
     today_bookings = cursor.fetchone()["count"]
-    
+
     cursor.execute("SELECT COUNT(*) as count FROM programs WHERE status = 'upcoming'")
     upcoming_programs = cursor.fetchone()["count"]
-    
+
     cursor.execute("SELECT * FROM members ORDER BY created_at DESC LIMIT 5")
     recent_members = [dict(row) for row in cursor.fetchall()]
-    
+
     cursor.execute("""
         SELECT b.*, m.first_name, m.last_name 
         FROM bookings b 
@@ -337,7 +329,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_active_us
         ORDER BY b.created_at DESC LIMIT 5
     """)
     recent_bookings = [dict(row) for row in cursor.fetchall()]
-    
+
     return {
         "total_members": total_members,
         "active_members": active_members,
