@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Camera, Instagram, Facebook, Twitter, Youtube, Globe, Calendar, CheckCircle, Clock, AlertTriangle, Image, Video, FileText, Linkedin } from 'lucide-react';
-import { marketingAPI } from '../api';
+import { Plus, Search, Camera, Instagram, Facebook, Twitter, Youtube, Globe, Calendar, CheckCircle, Clock, AlertTriangle, Image, Video, FileText, Globe } from 'lucide-react';
+import { Plus, Search, Camera, Instagram, Facebook, Twitter, Youtube, Globe, Calendar, CheckCircle, Clock, AlertTriangle, Image, Video, FileText } from 'lucide-react';
 import ContentAssetForm from '../components/marketing/ContentAssetForm';
 import SocialPostForm from '../components/marketing/SocialPostForm';
 
@@ -10,7 +10,7 @@ const platformIcons = {
   twitter: Twitter,
   youtube: Youtube,
   website: Globe,
-  linkedin: Linkedin,
+  linkedin: Globe,
 };
 
 const statusColors = {
@@ -25,11 +25,11 @@ const statusColors = {
 const contentTypeIcons = {
   photo: Image,
   video: Video,
-  reel: Film,
-  story: Layers,
+  reel: Video,
+  story: Image,
   poster: FileText,
-  banner: Layout,
-  press_release: Newspaper,
+  banner: Image,
+  press_release: FileText,
 };
 
 export default function Marketing() {
