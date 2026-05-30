@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
+from fastapi import FastAPI, Depends, HTTPException, status, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
@@ -16,7 +16,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
 app = FastAPI(title="Squash Excellence CRM API")
 
@@ -28,6 +28,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Create API router with v1 prefix
+api_router = APIRouter(prefix="/api/v1")
 
 # Database setup
 DB_PATH = os.path.join(os.path.dirname(__file__), "squash_crm.db")
@@ -271,7 +274,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     return current_user
 
 # Auth Routes
-@app.post("/api/auth/login", response_model=Token)
+@api_router.post("/auth/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: sqlite3.Connection = Depends(get_db)):
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
@@ -286,12 +289,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: sqlite3.Co
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-@app.get("/api/auth/me", response_model=User)
+@api_router.get("/auth/me", response_model=User)
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
 # Dashboard Stats
-@app.get("/api/dashboard/stats")
+@api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_active_user), db: sqlite3.Connection = Depends(get_db)):
     cursor = db.cursor()
     
@@ -335,7 +338,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_active_us
     }
 
 # Members Routes
-@app.get("/api/members", response_model=List[Member])
+@api_router.get("/members", response_model=List[Member])
 async def get_members(
     skip: int = 0, 
     limit: int = 100, 
@@ -355,7 +358,7 @@ async def get_members(
     members = [dict(row) for row in cursor.fetchall()]
     return members
 
-@app.post("/api/members", response_model=Member)
+@api_router.post("/members", response_model=Member)
 async def create_member(
     member: MemberCreate,
     current_user: User = Depends(get_current_active_user),
@@ -374,7 +377,7 @@ async def create_member(
     cursor.execute("SELECT * FROM members WHERE id = ?", (member_id,))
     return dict(cursor.fetchone())
 
-@app.get("/api/members/{member_id}", response_model=Member)
+@api_router.get("/members/{member_id}", response_model=Member)
 async def get_member(
     member_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -387,7 +390,7 @@ async def get_member(
         raise HTTPException(status_code=404, detail="Member not found")
     return dict(member)
 
-@app.put("/api/members/{member_id}", response_model=Member)
+@api_router.put("/members/{member_id}", response_model=Member)
 async def update_member(
     member_id: int,
     member: MemberCreate,
@@ -412,7 +415,7 @@ async def update_member(
         raise HTTPException(status_code=404, detail="Member not found")
     return dict(updated)
 
-@app.delete("/api/members/{member_id}")
+@api_router.delete("/members/{member_id}")
 async def delete_member(
     member_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -426,7 +429,7 @@ async def delete_member(
     return {"message": "Member deleted successfully"}
 
 # Programs Routes
-@app.get("/api/programs", response_model=List[Program])
+@api_router.get("/programs", response_model=List[Program])
 async def get_programs(
     skip: int = 0,
     limit: int = 100,
@@ -437,7 +440,7 @@ async def get_programs(
     cursor.execute("SELECT * FROM programs ORDER BY created_at DESC LIMIT ? OFFSET ?", (limit, skip))
     return [dict(row) for row in cursor.fetchall()]
 
-@app.post("/api/programs", response_model=Program)
+@api_router.post("/programs", response_model=Program)
 async def create_program(
     program: ProgramCreate,
     current_user: User = Depends(get_current_active_user),
@@ -456,7 +459,7 @@ async def create_program(
     cursor.execute("SELECT * FROM programs WHERE id = ?", (program_id,))
     return dict(cursor.fetchone())
 
-@app.get("/api/programs/{program_id}", response_model=Program)
+@api_router.get("/programs/{program_id}", response_model=Program)
 async def get_program(
     program_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -469,7 +472,7 @@ async def get_program(
         raise HTTPException(status_code=404, detail="Program not found")
     return dict(program)
 
-@app.put("/api/programs/{program_id}", response_model=Program)
+@api_router.put("/programs/{program_id}", response_model=Program)
 async def update_program(
     program_id: int,
     program: ProgramCreate,
@@ -493,7 +496,7 @@ async def update_program(
         raise HTTPException(status_code=404, detail="Program not found")
     return dict(updated)
 
-@app.delete("/api/programs/{program_id}")
+@api_router.delete("/programs/{program_id}")
 async def delete_program(
     program_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -507,7 +510,7 @@ async def delete_program(
     return {"message": "Program deleted successfully"}
 
 # Bookings Routes
-@app.get("/api/bookings")
+@api_router.get("/bookings")
 async def get_bookings(
     skip: int = 0,
     limit: int = 100,
@@ -533,7 +536,7 @@ async def get_bookings(
         """, (limit, skip))
     return [dict(row) for row in cursor.fetchall()]
 
-@app.post("/api/bookings")
+@api_router.post("/bookings")
 async def create_booking(
     booking: dict,
     current_user: User = Depends(get_current_active_user),
@@ -552,7 +555,7 @@ async def create_booking(
     cursor.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,))
     return dict(cursor.fetchone())
 
-@app.delete("/api/bookings/{booking_id}")
+@api_router.delete("/bookings/{booking_id}")
 async def delete_booking(
     booking_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -566,7 +569,7 @@ async def delete_booking(
     return {"message": "Booking deleted successfully"}
 
 # Campaigns/Marketing Routes
-@app.get("/api/campaigns", response_model=List[Campaign])
+@api_router.get("/campaigns", response_model=List[Campaign])
 async def get_campaigns(
     skip: int = 0,
     limit: int = 100,
@@ -577,7 +580,7 @@ async def get_campaigns(
     cursor.execute("SELECT * FROM campaigns ORDER BY created_at DESC LIMIT ? OFFSET ?", (limit, skip))
     return [dict(row) for row in cursor.fetchall()]
 
-@app.post("/api/campaigns", response_model=Campaign)
+@api_router.post("/campaigns", response_model=Campaign)
 async def create_campaign(
     campaign: CampaignCreate,
     current_user: User = Depends(get_current_active_user),
@@ -596,7 +599,7 @@ async def create_campaign(
     cursor.execute("SELECT * FROM campaigns WHERE id = ?", (campaign_id,))
     return dict(cursor.fetchone())
 
-@app.put("/api/campaigns/{campaign_id}")
+@api_router.put("/campaigns/{campaign_id}")
 async def update_campaign(
     campaign_id: int,
     campaign: CampaignCreate,
@@ -620,7 +623,7 @@ async def update_campaign(
         raise HTTPException(status_code=404, detail="Campaign not found")
     return dict(updated)
 
-@app.delete("/api/campaigns/{campaign_id}")
+@api_router.delete("/campaigns/{campaign_id}")
 async def delete_campaign(
     campaign_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -632,6 +635,9 @@ async def delete_campaign(
     if cursor.rowcount == 0:
         raise HTTPException(status_code=404, detail="Campaign not found")
     return {"message": "Campaign deleted successfully"}
+
+# Include the router
+app.include_router(api_router)
 
 # Health check
 @app.get("/api/health")
