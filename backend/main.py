@@ -636,6 +636,135 @@ async def delete_campaign(
         raise HTTPException(status_code=404, detail="Campaign not found")
     return {"message": "Campaign deleted successfully"}
 
+# ============================================================
+# FRONTEND ALIASES - Maps frontend route names to backend data
+# ============================================================
+
+# Tournaments -> Programs
+@api_router.get("/tournaments", response_model=List[Program])
+async def get_tournaments(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await get_programs(skip=skip, limit=limit, current_user=current_user, db=db)
+
+@api_router.get("/tournaments/{program_id}", response_model=Program)
+async def get_tournament(
+    program_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await get_program(program_id=program_id, current_user=current_user, db=db)
+
+@api_router.post("/tournaments", response_model=Program)
+async def create_tournament(
+    program: ProgramCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await create_program(program=program, current_user=current_user, db=db)
+
+@api_router.put("/tournaments/{program_id}", response_model=Program)
+async def update_tournament(
+    program_id: int,
+    program: ProgramCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await update_program(program_id=program_id, program=program, current_user=current_user, db=db)
+
+@api_router.delete("/tournaments/{program_id}")
+async def delete_tournament(
+    program_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await delete_program(program_id=program_id, current_user=current_user, db=db)
+
+# Athletes -> Members
+@api_router.get("/athletes", response_model=List[Member])
+async def get_athletes(
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await get_members(skip=skip, limit=limit, search=search, current_user=current_user, db=db)
+
+@api_router.get("/athletes/{member_id}", response_model=Member)
+async def get_athlete(
+    member_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await get_member(member_id=member_id, current_user=current_user, db=db)
+
+@api_router.post("/athletes", response_model=Member)
+async def create_athlete(
+    member: MemberCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await create_member(member=member, current_user=current_user, db=db)
+
+@api_router.put("/athletes/{member_id}", response_model=Member)
+async def update_athlete(
+    member_id: int,
+    member: MemberCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await update_member(member_id=member_id, member=member, current_user=current_user, db=db)
+
+@api_router.delete("/athletes/{member_id}")
+async def delete_athlete(
+    member_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await delete_member(member_id=member_id, current_user=current_user, db=db)
+
+# Finance -> Bookings (using bookings as financial records)
+@api_router.get("/finance")
+async def get_finance(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await get_bookings(skip=skip, limit=limit, current_user=current_user, db=db)
+
+# Stakeholders -> Members (subset view)
+@api_router.get("/stakeholders", response_model=List[Member])
+async def get_stakeholders(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await get_members(skip=skip, limit=limit, current_user=current_user, db=db)
+
+# Tournament dashboard stats alias
+@api_router.get("/tournaments/dashboard/stats")
+async def get_tournament_stats(
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return await get_dashboard_stats(current_user=current_user, db=db)
+
+# Tournament calendar alias
+@api_router.get("/tournaments/calendar/upcoming")
+async def get_tournament_calendar(
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM programs WHERE status = 'upcoming' ORDER BY start_date LIMIT 10")
+    return [dict(row) for row in cursor.fetchall()]
+
 # Include the router
 app.include_router(api_router)
 

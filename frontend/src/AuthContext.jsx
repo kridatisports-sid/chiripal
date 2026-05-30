@@ -24,8 +24,13 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await authAPI.login(email, password);
-    const { access_token, user } = res.data;
+    const { access_token } = res.data;
     localStorage.setItem('token', access_token);
+    
+    // Fetch user profile with the new token
+    const userRes = await authAPI.me();
+    const user = userRes.data;
+    
     localStorage.setItem('user', JSON.stringify(user));
     setUser(user);
     return user;
