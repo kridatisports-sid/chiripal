@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Building2, Phone, Mail, Calendar, AlertTriangle, CheckCircle, Clock, MessageSquare, Users, Trophy, DollarSign, Camera, Truck, HelpCircle } from 'lucide-react';
+import { Plus, Search, Building, Phone, Mail, Calendar, AlertTriangle, CheckCircle, Clock, MessageSquare, Users, Star, CreditCard, Image, Package, CircleHelp } from 'lucide-react';
 import { stakeholderAPI } from '../api';
 import StakeholderForm from '../components/stakeholders/StakeholderForm';
 import TouchpointForm from '../components/stakeholders/TouchpointForm';
 
 const typeIcons = {
-  state_association: Building2,
-  srfi: Trophy,
-  club_partner: Building2,
+  state_association: Building,
+  srfi: Star,
+  club_partner: Building,
   coach: Users,
-  sponsor: DollarSign,
-  media: Camera,
-  vendor: Truck,
-  other: HelpCircle,
+  sponsor: CreditCard,
+  media: Image,
+  vendor: Package,
+  other: CircleHelp,
 };
 
 const mouStatusColors = {
@@ -190,7 +190,7 @@ export default function Stakeholders() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filtered.map(s => {
-                const Icon = typeIcons[s.stakeholder_type] || Building2;
+                const Icon = typeIcons[s.stakeholder_type] || Building;
                 return (
                   <div key={s.id} className="card hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-3">
@@ -211,7 +211,7 @@ export default function Stakeholders() {
                     <div className="space-y-1.5 text-sm">
                       {s.organization && (
                         <div className="flex items-center gap-2 text-gray-600">
-                          <Building2 className="w-4 h-4 text-gray-400" />
+                          <Building className="w-4 h-4 text-gray-400" />
                           {s.organization}
                         </div>
                       )}
