@@ -44,8 +44,8 @@ def get_db():
         conn.close()
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    # ... rest of the function
     
     # Users table
     cursor.execute("""
