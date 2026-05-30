@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Depends, HTTPException, status, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
+# After app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For dev only - restrict in production
+    allow_origins=["*"],  # Allow all for dev
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
