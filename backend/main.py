@@ -152,7 +152,9 @@ def init_db():
     conn.close()
 
 # Initialize database on startup
-init_db()
+@app.on_event("startup")
+async def startup():
+    init_db()
 
 # Pydantic Models
 class User(BaseModel):
