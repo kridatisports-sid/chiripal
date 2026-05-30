@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'https://stunning-meme-v6x9vg6x55p52p6q6-8000.app.github.dev/api/v1';
+// Use your actual GitHub Codespaces backend URL
+const API_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
