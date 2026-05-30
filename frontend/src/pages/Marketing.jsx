@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Camera, Instagram, Facebook, Twitter, Youtube, Globe, Calendar, CheckCircle, Clock, AlertTriangle, Image, Video, FileText } from 'lucide-react';
+import { Plus, Search, Camera, Instagram, Facebook, Twitter, Youtube, Globe, Calendar, CheckCircle, Clock, AlertTriangle, Image, Video, FileText, Linkedin } from 'lucide-react';
 import { marketingAPI } from '../api';
 import ContentAssetForm from '../components/marketing/ContentAssetForm';
 import SocialPostForm from '../components/marketing/SocialPostForm';
