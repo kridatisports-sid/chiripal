@@ -765,6 +765,115 @@ async def get_tournament_calendar(
     cursor.execute("SELECT * FROM programs WHERE status = 'upcoming' ORDER BY start_date LIMIT 10")
     return [dict(row) for row in cursor.fetchall()]
 
+
+# ============================================================
+# ADDITIONAL FRONTEND ENDPOINTS
+# ============================================================
+
+# Athletes dashboard stats
+@api_router.get("/athletes/dashboard/stats")
+async def get_athletes_dashboard_stats(
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    cursor = db.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM members")
+    total = cursor.fetchone()["count"]
+    cursor.execute("SELECT COUNT(*) as count FROM members WHERE status = 'active'")
+    active = cursor.fetchone()["count"]
+    return {
+        "total_athletes": total,
+        "active_athletes": active,
+        "athletes_by_tier": {"Tier 1": 0, "Tier 2": 0, "Tier 3": 0},
+        "upcoming_contract_renewals": 0
+    }
+
+# Finance dashboard stats
+@api_router.get("/finance/dashboard/stats")
+async def get_finance_dashboard_stats(
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return {
+        "total_budget": 0,
+        "total_spent": 0,
+        "total_remaining": 0,
+        "burn_rate_monthly": 0,
+        "months_remaining": 999,
+        "spending_by_category": []
+    }
+
+# Marketing dashboard stats
+@api_router.get("/marketing/dashboard/stats")
+async def get_marketing_dashboard_stats(
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    cursor = db.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM campaigns")
+    total = cursor.fetchone()["count"]
+    return {
+        "total_posts": total,
+        "upcoming_posts": 0,
+        "pending_approvals": 0
+    }
+
+# Finance budgets
+@api_router.get("/finance/budgets/current")
+async def get_finance_budgets(
+    fiscal_year: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return {"id": 1, "fiscal_year": fiscal_year or "2024-25", "total_budget": 0, "spent": 0, "remaining": 0}
+
+# Finance transactions
+@api_router.get("/finance/transactions")
+async def get_finance_transactions(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return []
+
+# Stakeholder touchpoints
+@api_router.get("/stakeholders/touchpoints/recent")
+async def get_stakeholder_touchpoints_recent(
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return []
+
+@api_router.get("/stakeholders/touchpoints/follow-ups")
+async def get_stakeholder_followups(
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return []
+
+# Marketing assets
+@api_router.get("/marketing/assets")
+async def get_marketing_assets(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    return []
+
+# Marketing posts
+@api_router.get("/marketing/posts")
+async def get_marketing_posts(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_active_user),
+    db: sqlite3.Connection = Depends(get_db)
+):
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM campaigns ORDER BY created_at DESC LIMIT ? OFFSET ?", (limit, skip))
+    return [dict(row) for row in cursor.fetchall()]
+
 # Include the router
 app.include_router(api_router)
 
