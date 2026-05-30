@@ -201,3 +201,4 @@ Traceback (most recent call last):
     cursor.execute("""
     ^^^^^^
 NameError: name 'cursor' is not defined
+INFO:     Stopping reloader process [41236]
