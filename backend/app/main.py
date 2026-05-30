@@ -56,3 +56,7 @@ def root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "timestamp": __import__("datetime").datetime.now().isoformat()}
+
+@app.on_event("startup")
+async def startup():
+    init_db()
