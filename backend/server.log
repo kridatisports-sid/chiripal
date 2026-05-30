@@ -62,3 +62,12 @@ Traceback (most recent call last):
     cursor = db.cursor()
              ^^^^^^^^^^^
 sqlite3.ProgrammingError: SQLite objects created in a thread can only be used in that same thread. The object was created in thread id 133203027703488 and this is thread id 133203089987392.
+WARNING:  WatchFiles detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [41242]
+WARNING:  WatchFiles detected changes in 'main.py'. Reloading...
+INFO:     Started server process [44234]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
