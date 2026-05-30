@@ -21,20 +21,28 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 # Create FastAPI app FIRST
 app = FastAPI(title="Squash Excellence CRM API")
 
-# CORS - Must be added AFTER app creation, BEFORE routes
+import os
+
+# Dynamic CORS - works for any Vercel preview or production URL
+ALLOWED_ORIGINS = [
+    "https://squash-crm.vercel.app",           # Your production URL (change this)
+    "https://squash-crm-git-main.vercel.app",  # Git branch preview
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+
+# Add any additional origins from env
+env_origins = os.getenv("ALLOWED_ORIGINS", "")
+if env_origins:
+    ALLOWED_ORIGINS.extend(env_origins.split(","))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://stunning-meme-v6x9vg6x55p52p6q6-3000.app.github.dev",
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
-    max_age=3600,
 )
 
 # Create API router with v1 prefix
