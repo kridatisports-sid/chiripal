@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Building, Phone, Mail, Calendar, AlertTriangle, CheckCircle, Clock, MessageSquare, Users, Star, CreditCard, Image, Package, CircleHelp } from 'lucide-react';
+import { Plus, Search, Building, Phone, Mail, Calendar, AlertTriangle, CheckCircle, Clock, MessageSquare, Users, Star, CreditCard, Image, Package, HelpCircle } from 'lucide-react';
 import { stakeholderAPI } from '../api';
 import StakeholderForm from '../components/stakeholders/StakeholderForm';
 import TouchpointForm from '../components/stakeholders/TouchpointForm';
@@ -13,7 +13,7 @@ const typeIcons = {
   sponsor: CreditCard,
   media: Image,
   vendor: Package,
-  other: CircleHelp,
+  other: HelpCircle,
 };
 
 const mouStatusColors = {
