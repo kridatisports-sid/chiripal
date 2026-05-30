@@ -20,13 +20,20 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
 app = FastAPI(title="Squash Excellence CRM API")
 
-# CORS - Allow all origins for GitHub Codespaces
+# CORS - Explicitly allow frontend origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://stunning-meme-v6x9vg6x55p52p6q6-3000.app.github.dev",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8000",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Create API router with v1 prefix
@@ -298,28 +305,22 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 async def get_dashboard_stats(current_user: User = Depends(get_current_active_user), db: sqlite3.Connection = Depends(get_db)):
     cursor = db.cursor()
     
-    # Total members
     cursor.execute("SELECT COUNT(*) as count FROM members")
     total_members = cursor.fetchone()["count"]
     
-    # Active members
     cursor.execute("SELECT COUNT(*) as count FROM members WHERE status = 'active'")
     active_members = cursor.fetchone()["count"]
     
-    # Today's bookings
     today = datetime.now().strftime("%Y-%m-%d")
     cursor.execute("SELECT COUNT(*) as count FROM bookings WHERE booking_date = ?", (today,))
     today_bookings = cursor.fetchone()["count"]
     
-    # Upcoming programs
     cursor.execute("SELECT COUNT(*) as count FROM programs WHERE status = 'upcoming'")
     upcoming_programs = cursor.fetchone()["count"]
     
-    # Recent members (last 5)
     cursor.execute("SELECT * FROM members ORDER BY created_at DESC LIMIT 5")
     recent_members = [dict(row) for row in cursor.fetchall()]
     
-    # Recent bookings (last 5)
     cursor.execute("""
         SELECT b.*, m.first_name, m.last_name 
         FROM bookings b 
@@ -727,7 +728,7 @@ async def delete_athlete(
 ):
     return await delete_member(member_id=member_id, current_user=current_user, db=db)
 
-# Finance -> Bookings (using bookings as financial records)
+# Finance -> Bookings
 @api_router.get("/finance")
 async def get_finance(
     skip: int = 0,
@@ -737,7 +738,7 @@ async def get_finance(
 ):
     return await get_bookings(skip=skip, limit=limit, current_user=current_user, db=db)
 
-# Stakeholders -> Members (subset view)
+# Stakeholders -> Members
 @api_router.get("/stakeholders", response_model=List[Member])
 async def get_stakeholders(
     skip: int = 0,
@@ -747,7 +748,7 @@ async def get_stakeholders(
 ):
     return await get_members(skip=skip, limit=limit, current_user=current_user, db=db)
 
-# Tournament dashboard stats alias
+# Tournament dashboard stats
 @api_router.get("/tournaments/dashboard/stats")
 async def get_tournament_stats(
     current_user: User = Depends(get_current_active_user),
@@ -755,7 +756,7 @@ async def get_tournament_stats(
 ):
     return await get_dashboard_stats(current_user=current_user, db=db)
 
-# Tournament calendar alias
+# Tournament calendar
 @api_router.get("/tournaments/calendar/upcoming")
 async def get_tournament_calendar(
     current_user: User = Depends(get_current_active_user),
@@ -764,11 +765,6 @@ async def get_tournament_calendar(
     cursor = db.cursor()
     cursor.execute("SELECT * FROM programs WHERE status = 'upcoming' ORDER BY start_date LIMIT 10")
     return [dict(row) for row in cursor.fetchall()]
-
-
-# ============================================================
-# ADDITIONAL FRONTEND ENDPOINTS
-# ============================================================
 
 # Athletes dashboard stats
 @api_router.get("/athletes/dashboard/stats")
