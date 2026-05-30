@@ -855,6 +855,21 @@ async def get_marketing_posts(
     cursor.execute("SELECT * FROM campaigns ORDER BY created_at DESC LIMIT ? OFFSET ?", (limit, skip))
     return [dict(row) for row in cursor.fetchall()]
 
+@api_router.get("/dashboard/stats")
+async def get_dashboard_stats(current_user: User = Depends(get_current_active_user), db: sqlite3.Connection = Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM members")
+    total_members = cursor.fetchone()["count"]
+    cursor.execute("SELECT COUNT(*) as count FROM members WHERE status = 'active'")
+    active_members = cursor.fetchone()["count"]
+    return {
+        "total_members": total_members,
+        "active_members": active_members,
+        "today_bookings": 0,
+        "upcoming_programs": 0,
+        "recent_members": [],
+        "recent_bookings": []
+    }
 # Include the router
 app.include_router(api_router)
 
@@ -862,6 +877,11 @@ app.include_router(api_router)
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+@app.get("/seed")
+async def seed():
+    init_db()
+    return {"message": "Database seeded"}
 
 # Root endpoint
 @app.get("/")
