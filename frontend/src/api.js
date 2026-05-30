@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use your actual GitHub Codespaces backend URL
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const API_URL = 'https://squash-crm-api.onrender.com/api/v1';
 
 const api = axios.create({
   baseURL: API_URL,
