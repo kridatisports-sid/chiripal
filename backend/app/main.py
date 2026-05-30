@@ -60,3 +60,8 @@ def health_check():
 @app.on_event("startup")
 async def startup():
     init_db()
+
+@app.get("/seed")
+async def seed():
+    init_db()
+    return {"message": "Database seeded"}
