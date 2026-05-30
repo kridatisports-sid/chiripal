@@ -18,34 +18,25 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
-# Create FastAPI app FIRST
+# Create FastAPI app
 app = FastAPI(title="Squash Excellence CRM API")
 
-import os
-
-# Dynamic CORS - works for any Vercel preview or production URL
-ALLOWED_ORIGINS = [
-    "https://squash-crm.vercel.app",           # Your production URL (change this)
-    "https://squash-crm-git-main.vercel.app",  # Git branch preview
-    "http://localhost:5173",
-    "http://localhost:3000",
-]
-
-# Add any additional origins from env
-env_origins = os.getenv("ALLOWED_ORIGINS", "")
-if env_origins:
-    ALLOWED_ORIGINS.extend(env_origins.split(","))
-
+# CORS - Allow Vercel frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=[
+        "https://chiripal-green.vercel.app",
+        "https://chiripal.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
 
-# Create API router with v1 prefix
+# Create API router
 api_router = APIRouter(prefix="/api/v1")
 
 # Database setup
@@ -62,7 +53,7 @@ def get_db():
 def init_db():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     cursor = conn.cursor()
-
+    
     # Users table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -75,7 +66,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-
+    
     # Members table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS members (
@@ -92,7 +83,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-
+    
     # Programs/Events table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS programs (
@@ -107,7 +98,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-
+    
     # Bookings/Court reservations
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS bookings (
@@ -123,7 +114,7 @@ def init_db():
             FOREIGN KEY (member_id) REFERENCES members (id)
         )
     """)
-
+    
     # Campaigns/Marketing
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS campaigns (
@@ -140,14 +131,14 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-
+    
     # Insert default admin user
     hashed_password = pwd_context.hash("squash2026")
     cursor.execute("""
         INSERT OR IGNORE INTO users (email, hashed_password, full_name, role)
         VALUES (?, ?, ?, ?)
     """, ("admin@squash-excellence.com", hashed_password, "Admin User", "admin"))
-
+    
     conn.commit()
     conn.close()
 
@@ -315,23 +306,23 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_active_user), db: sqlite3.Connection = Depends(get_db)):
     cursor = db.cursor()
-
+    
     cursor.execute("SELECT COUNT(*) as count FROM members")
     total_members = cursor.fetchone()["count"]
-
+    
     cursor.execute("SELECT COUNT(*) as count FROM members WHERE status = 'active'")
     active_members = cursor.fetchone()["count"]
-
+    
     today = datetime.now().strftime("%Y-%m-%d")
     cursor.execute("SELECT COUNT(*) as count FROM bookings WHERE booking_date = ?", (today,))
     today_bookings = cursor.fetchone()["count"]
-
+    
     cursor.execute("SELECT COUNT(*) as count FROM programs WHERE status = 'upcoming'")
     upcoming_programs = cursor.fetchone()["count"]
-
+    
     cursor.execute("SELECT * FROM members ORDER BY created_at DESC LIMIT 5")
     recent_members = [dict(row) for row in cursor.fetchall()]
-
+    
     cursor.execute("""
         SELECT b.*, m.first_name, m.last_name 
         FROM bookings b 
@@ -339,7 +330,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_active_us
         ORDER BY b.created_at DESC LIMIT 5
     """)
     recent_bookings = [dict(row) for row in cursor.fetchall()]
-
+    
     return {
         "total_members": total_members,
         "active_members": active_members,
@@ -648,11 +639,7 @@ async def delete_campaign(
         raise HTTPException(status_code=404, detail="Campaign not found")
     return {"message": "Campaign deleted successfully"}
 
-# ============================================================
-# FRONTEND ALIASES - Maps frontend route names to backend data
-# ============================================================
-
-# Tournaments -> Programs
+# Frontend Aliases
 @api_router.get("/tournaments", response_model=List[Program])
 async def get_tournaments(
     skip: int = 0,
@@ -695,7 +682,6 @@ async def delete_tournament(
 ):
     return await delete_program(program_id=program_id, current_user=current_user, db=db)
 
-# Athletes -> Members
 @api_router.get("/athletes", response_model=List[Member])
 async def get_athletes(
     skip: int = 0,
@@ -739,7 +725,6 @@ async def delete_athlete(
 ):
     return await delete_member(member_id=member_id, current_user=current_user, db=db)
 
-# Finance -> Bookings
 @api_router.get("/finance")
 async def get_finance(
     skip: int = 0,
@@ -749,7 +734,6 @@ async def get_finance(
 ):
     return await get_bookings(skip=skip, limit=limit, current_user=current_user, db=db)
 
-# Stakeholders -> Members
 @api_router.get("/stakeholders", response_model=List[Member])
 async def get_stakeholders(
     skip: int = 0,
@@ -759,7 +743,6 @@ async def get_stakeholders(
 ):
     return await get_members(skip=skip, limit=limit, current_user=current_user, db=db)
 
-# Tournament dashboard stats
 @api_router.get("/tournaments/dashboard/stats")
 async def get_tournament_stats(
     current_user: User = Depends(get_current_active_user),
@@ -767,7 +750,6 @@ async def get_tournament_stats(
 ):
     return await get_dashboard_stats(current_user=current_user, db=db)
 
-# Tournament calendar
 @api_router.get("/tournaments/calendar/upcoming")
 async def get_tournament_calendar(
     current_user: User = Depends(get_current_active_user),
@@ -777,7 +759,6 @@ async def get_tournament_calendar(
     cursor.execute("SELECT * FROM programs WHERE status = 'upcoming' ORDER BY start_date LIMIT 10")
     return [dict(row) for row in cursor.fetchall()]
 
-# Athletes dashboard stats
 @api_router.get("/athletes/dashboard/stats")
 async def get_athletes_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
@@ -795,7 +776,6 @@ async def get_athletes_dashboard_stats(
         "upcoming_contract_renewals": 0
     }
 
-# Finance dashboard stats
 @api_router.get("/finance/dashboard/stats")
 async def get_finance_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
@@ -810,7 +790,6 @@ async def get_finance_dashboard_stats(
         "spending_by_category": []
     }
 
-# Marketing dashboard stats
 @api_router.get("/marketing/dashboard/stats")
 async def get_marketing_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
@@ -825,7 +804,6 @@ async def get_marketing_dashboard_stats(
         "pending_approvals": 0
     }
 
-# Finance budgets
 @api_router.get("/finance/budgets/current")
 async def get_finance_budgets(
     fiscal_year: Optional[str] = None,
@@ -834,7 +812,6 @@ async def get_finance_budgets(
 ):
     return {"id": 1, "fiscal_year": fiscal_year or "2024-25", "total_budget": 0, "spent": 0, "remaining": 0}
 
-# Finance transactions
 @api_router.get("/finance/transactions")
 async def get_finance_transactions(
     skip: int = 0,
@@ -844,7 +821,6 @@ async def get_finance_transactions(
 ):
     return []
 
-# Stakeholder touchpoints
 @api_router.get("/stakeholders/touchpoints/recent")
 async def get_stakeholder_touchpoints_recent(
     current_user: User = Depends(get_current_active_user),
@@ -859,7 +835,6 @@ async def get_stakeholder_followups(
 ):
     return []
 
-# Marketing assets
 @api_router.get("/marketing/assets")
 async def get_marketing_assets(
     skip: int = 0,
@@ -869,7 +844,6 @@ async def get_marketing_assets(
 ):
     return []
 
-# Marketing posts
 @api_router.get("/marketing/posts")
 async def get_marketing_posts(
     skip: int = 0,
@@ -895,8 +869,17 @@ async def root():
     return {
         "message": "Squash Excellence CRM API",
         "version": "1.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
+        "endpoints": {
+            "auth": "/api/v1/auth",
+            "tournaments": "/api/v1/tournaments",
+            "athletes": "/api/v1/athletes",
+            "finance": "/api/v1/finance",
+            "stakeholders": "/api/v1/stakeholders",
+            "marketing": "/api/v1/marketing"
+        }
     }
 
-from mangum import Adapter
-handler = Adapter(app)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
